@@ -5,6 +5,7 @@ import { CompanyDetailsStep } from './components/CompanyDetailsStep';
 import { StatutoryInfoStep } from './components/StatutoryInfoStep';
 import { PensionSetupStep } from './components/PensionSetupStep';
 import { PayScheduleStep } from './components/PayScheduleStep';
+import { PayrollCalculationView } from './components/PayrollCalculationView';
 import { StepIndicator } from './components/StepIndicator';
 import { ProgressBar } from './components/ProgressBar';
 import { CheckCircleIcon, CheckIcon } from './components/icons';
@@ -81,7 +82,7 @@ const App: React.FC = () => {
 
   // Effect to save the current step path to localStorage
   useEffect(() => {
-    if (location.pathname !== '/complete') {
+    if (location.pathname !== '/complete' && location.pathname !== '/payroll-calculation') {
       localStorage.setItem('onboardingLastStep', location.pathname);
     }
   }, [location.pathname]);
@@ -96,11 +97,14 @@ const App: React.FC = () => {
   }, []);
 
   const currentStepInfo = useMemo(() => 
-    steps.find(s => s.path === location.pathname) || steps[0], 
+    steps.find(s => s.path === location.pathname) || { path: location.pathname, step: 5 }, 
     [location.pathname]
   );
   const currentStep = currentStepInfo.step;
   const currentStepIndex = steps.findIndex(s => s.path === location.pathname);
+  
+  const isWizardStep = location.pathname !== '/payroll-calculation';
+
 
   const validateStep = (step: number): boolean => {
     const newErrors: FormErrors = {};
@@ -232,7 +236,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden relative">
-        {hasSavedData && currentStep <= TOTAL_STEPS && (
+        {hasSavedData && currentStep <= TOTAL_STEPS && isWizardStep && (
             <button
                 onClick={handleClearAndRestart}
                 className="absolute top-4 right-4 text-xs text-slate-500 hover:text-red-600 underline z-10 transition-colors"
@@ -240,17 +244,21 @@ const App: React.FC = () => {
                 Clear progress and restart
             </button>
         )}
-        <div className="p-8">
-            <h1 className="text-2xl font-bold text-slate-800 text-center mb-2">Company Onboarding</h1>
-            <p className="text-slate-500 text-center mb-8">Set up your company profile to get started with payroll.</p>
-            
-            <div className="px-4 md:px-10">
-                <StepIndicator currentStep={currentStep} totalSteps={TOTAL_STEPS} titles={stepTitles} />
-                <div className="my-6">
-                    <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+
+        {isWizardStep && (
+             <div className="p-8">
+                <h1 className="text-2xl font-bold text-slate-800 text-center mb-2">Company Onboarding</h1>
+                <p className="text-slate-500 text-center mb-8">Set up your company profile to get started with payroll.</p>
+                
+                <div className="px-4 md:px-10">
+                    <StepIndicator currentStep={currentStep} totalSteps={TOTAL_STEPS} titles={stepTitles} />
+                    <div className="my-6">
+                        <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+                    </div>
                 </div>
             </div>
-        </div>
+        )}
+       
 
         <div className="bg-slate-50 px-8 py-10">
           <Routes>
@@ -259,23 +267,32 @@ const App: React.FC = () => {
             <Route path="/statutory" element={<StatutoryInfoStep data={formData} onDataChange={handleChange} />} />
             <Route path="/pension" element={<PensionSetupStep pfas={formData.pfas} onPfasChange={updatePfas} errors={errors.pfaErrors}/>} />
             <Route path="/schedule" element={<PayScheduleStep data={formData} onDataChange={handleChange} errors={errors} />} />
+            <Route path="/payroll-calculation" element={<PayrollCalculationView />} />
             <Route path="/complete" element={
               <div className="text-center p-8 animate-fade-in">
                 <CheckCircleIcon className="w-20 h-20 text-green-500 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-slate-800 mb-2">Onboarding Complete!</h2>
-                <p className="text-slate-600 mb-6">Your company profile has been successfully created.</p>
-                <button
-                    onClick={handleClearAndRestart}
-                    className="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300"
-                >
-                    Start New Onboarding
-                </button>
+                <p className="text-slate-600 mb-8">Your company profile has been successfully created.</p>
+                <div className="flex justify-center items-center gap-4">
+                     <button
+                        onClick={handleClearAndRestart}
+                        className="bg-slate-200 text-slate-800 font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 transition-all duration-300"
+                    >
+                        Start New Onboarding
+                    </button>
+                    <button
+                        onClick={() => navigate('/payroll-calculation')}
+                        className="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300"
+                    >
+                        View Sample Payroll Calculation
+                    </button>
+                </div>
               </div>
             } />
           </Routes>
         </div>
         
-        {currentStep <= TOTAL_STEPS && (
+        {currentStep <= TOTAL_STEPS && isWizardStep && (
           <div className="flex justify-between items-center p-6 bg-white border-t border-slate-200">
             <div>
               <button
