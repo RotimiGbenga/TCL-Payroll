@@ -15,16 +15,26 @@ export const PayScheduleStep: React.FC<Props> = ({ data, onDataChange, errors })
         <div className="space-y-6">
             <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Pay Frequency</label>
-                <div className="flex space-x-4">
-                    <label className={`flex-1 p-4 border rounded-lg cursor-pointer transition-all ${data.payFrequency === 'monthly' ? 'bg-indigo-50 border-indigo-500 ring-2 ring-indigo-500' : 'border-slate-300 hover:border-slate-400'}`}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label className={`flex flex-col p-4 border rounded-lg cursor-pointer transition-all ${data.payFrequency === 'monthly' ? 'bg-indigo-50 border-indigo-500 ring-2 ring-indigo-500' : 'border-slate-300 hover:border-slate-400'}`}>
                         <input type="radio" name="payFrequency" value="monthly" checked={data.payFrequency === 'monthly'} onChange={onDataChange} className="sr-only" />
                         <span className="text-sm font-semibold text-slate-800">Monthly</span>
-                        <p className="text-xs text-slate-500">Employees are paid once a month.</p>
+                        <p className="text-xs text-slate-500 mt-1">Employees are paid once a month.</p>
                     </label>
-                     <label className={`flex-1 p-4 border rounded-lg cursor-pointer transition-all ${data.payFrequency === 'bi-weekly' ? 'bg-indigo-50 border-indigo-500 ring-2 ring-indigo-500' : 'border-slate-300 hover:border-slate-400'}`}>
+                     <label className={`flex flex-col p-4 border rounded-lg cursor-pointer transition-all ${data.payFrequency === 'bi-weekly' ? 'bg-indigo-50 border-indigo-500 ring-2 ring-indigo-500' : 'border-slate-300 hover:border-slate-400'}`}>
                         <input type="radio" name="payFrequency" value="bi-weekly" checked={data.payFrequency === 'bi-weekly'} onChange={onDataChange} className="sr-only" />
                         <span className="text-sm font-semibold text-slate-800">Bi-weekly</span>
-                        <p className="text-xs text-slate-500">Employees are paid every two weeks.</p>
+                        <p className="text-xs text-slate-500 mt-1">Employees are paid every two weeks.</p>
+                    </label>
+                    <label className={`flex flex-col p-4 border rounded-lg cursor-pointer transition-all ${data.payFrequency === 'weekly' ? 'bg-indigo-50 border-indigo-500 ring-2 ring-indigo-500' : 'border-slate-300 hover:border-slate-400'}`}>
+                        <input type="radio" name="payFrequency" value="weekly" checked={data.payFrequency === 'weekly'} onChange={onDataChange} className="sr-only" />
+                        <span className="text-sm font-semibold text-slate-800">Weekly</span>
+                        <p className="text-xs text-slate-500 mt-1">Employees are paid every week.</p>
+                    </label>
+                    <label className={`flex flex-col p-4 border rounded-lg cursor-pointer transition-all ${data.payFrequency === 'semi-monthly' ? 'bg-indigo-50 border-indigo-500 ring-2 ring-indigo-500' : 'border-slate-300 hover:border-slate-400'}`}>
+                        <input type="radio" name="payFrequency" value="semi-monthly" checked={data.payFrequency === 'semi-monthly'} onChange={onDataChange} className="sr-only" />
+                        <span className="text-sm font-semibold text-slate-800">Semi-monthly</span>
+                        <p className="text-xs text-slate-500 mt-1">Employees are paid twice a month.</p>
                     </label>
                 </div>
                 {errors.payFrequency && <p className="mt-2 text-sm text-red-600">{errors.payFrequency}</p>}

@@ -149,22 +149,22 @@ export const PayrollRunDashboard: React.FC<PayrollRunDashboardProps> = ({ employ
 
                         {/* Summary Cards */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                            <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                            <Link to="/employees" className="block bg-white p-5 rounded-lg border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all">
                                 <p className="text-sm font-medium text-slate-500">Total Employees</p>
                                 <p className="text-2xl font-bold text-slate-800">{employees.length}</p>
-                            </div>
-                             <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                            </Link>
+                             <Link to="/reports/payroll-register" className="block bg-white p-5 rounded-lg border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all">
                                 <p className="text-sm font-medium text-slate-500">Gross Payroll Amount</p>
                                 <p className="text-2xl font-bold text-slate-800">{formatCurrency(totals.gross)}</p>
-                            </div>
-                            <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                            </Link>
+                            <Link to="/reports/payroll-register" className="block bg-white p-5 rounded-lg border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all">
                                 <p className="text-sm font-medium text-slate-500">Total Deductions</p>
                                 <p className="text-2xl font-bold text-slate-800">{formatCurrency(totals.deductions)}</p>
-                            </div>
-                            <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                            </Link>
+                            <Link to="/reports/payroll-register" className="block bg-white p-5 rounded-lg border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all">
                                 <p className="text-sm font-medium text-slate-500">Net Pay</p>
                                 <p className="text-2xl font-bold text-indigo-600">{formatCurrency(totals.net)}</p>
-                            </div>
+                            </Link>
                         </div>
 
                         {/* Checklist and Run Payroll Button */}
@@ -207,7 +207,12 @@ export const PayrollRunDashboard: React.FC<PayrollRunDashboardProps> = ({ employ
 
                         {/* Employee List */}
                         <div>
-                             <h3 className="text-xl font-bold text-slate-800 mb-4">Payroll Details</h3>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-xl font-bold text-slate-800">Payroll Details</h3>
+                                <Link to="/employees" className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                                    View Full Employee List &rarr;
+                                </Link>
+                            </div>
                              <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-sm">

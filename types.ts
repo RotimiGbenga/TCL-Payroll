@@ -16,7 +16,7 @@ export interface FormData {
   nsitfEcaCode: string;
   stateTaxId: string;
   pfas: PFA[];
-  payFrequency: 'monthly' | 'bi-weekly' | '';
+  payFrequency: 'monthly' | 'bi-weekly' | 'weekly' | 'semi-monthly' | '';
   payDay: string;
   defaultSalaryComponents: {
     basic: number;
