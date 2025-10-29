@@ -1,4 +1,3 @@
-
 export interface PFA {
   id: number;
   pfaName: string;
@@ -19,6 +18,11 @@ export interface FormData {
   pfas: PFA[];
   payFrequency: 'monthly' | 'bi-weekly' | '';
   payDay: string;
+  defaultSalaryComponents: {
+    basic: number;
+    housing: number;
+    transport: number;
+  };
 }
 
 export interface Employee {
@@ -58,4 +62,30 @@ export interface Employee {
 
   // Other
   loanDeduction?: number; // Optional loan
+  
+  // ESS
+  leaveBalances: {
+    annual: number;
+    sick: number;
+  };
+}
+
+// For ESS Features
+export interface LeaveRequest {
+  id: number;
+  employeeId: string;
+  leaveType: 'annual' | 'sick';
+  startDate: string;
+  endDate: string;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+}
+
+export interface ChangeRequest {
+  id: number;
+  employeeId: string;
+  field: keyof Employee;
+  oldValue: any;
+  newValue: any;
+  status: 'pending' | 'approved' | 'rejected';
 }

@@ -1,4 +1,3 @@
-
 import type { Employee } from '../types';
 
 // --- Sample Data ---
@@ -25,6 +24,7 @@ export const sampleEmployees: Employee[] = [
         tin: '12345678-0001',
         pfa: 'Stanbic IBTC Pension Managers',
         rsaPin: 'PEN123456789012',
+        leaveBalances: { annual: 15, sick: 10 },
     },
     { 
         id: 'EMP002', 
@@ -48,6 +48,7 @@ export const sampleEmployees: Employee[] = [
         tin: '23456789-0001',
         pfa: 'ARM Pension Managers',
         rsaPin: 'PEN234567890123',
+        leaveBalances: { annual: 20, sick: 10 },
     },
     { 
         id: 'EMP003', 
@@ -71,6 +72,7 @@ export const sampleEmployees: Employee[] = [
         tin: '34567890-0001',
         pfa: 'Stanbic IBTC Pension Managers',
         rsaPin: 'PEN345678901234',
+        leaveBalances: { annual: 25, sick: 12 },
     },
     { 
         id: 'EMP004', 
@@ -80,7 +82,6 @@ export const sampleEmployees: Employee[] = [
         annualGrossSalary: 3600000, 
         annualRent: 600000, 
         contributesToNHF: true, 
-        // FIX: Corrected typo from loanDDeduction to loanDeduction
         loanDeduction: 10000, 
         salaryComponents: { basic: 0.6, housing: 0.2, transport: 0.2 },
         dateOfBirth: '1995-02-28',
@@ -95,6 +96,7 @@ export const sampleEmployees: Employee[] = [
         tin: '45678901-0001',
         pfa: 'Premium Pension Limited',
         rsaPin: 'PEN456789012345',
+        leaveBalances: { annual: 18, sick: 10 },
     },
 ];
 
@@ -155,6 +157,10 @@ export const calculatePayroll = (employee: Employee) => {
   const totalMonthlyDeductions = monthlyPension + monthlyNHF + monthlyPAYE + monthlyLoan;
   const netTakeHomePay = monthlyGross - totalMonthlyDeductions;
 
+  // YTD Calculations
+  const ytdDeductions = annualPension + annualNHF + totalAnnualPAYE + (monthlyLoan * 12);
+  const ytdNetPay = annualGross - ytdDeductions;
+
   return {
     monthlyGross,
     monthlyBasic,
@@ -172,6 +178,8 @@ export const calculatePayroll = (employee: Employee) => {
     annualTaxableIncome,
     taxBands,
     totalAnnualPAYE,
+    ytdDeductions,
+    ytdNetPay,
   };
 };
 

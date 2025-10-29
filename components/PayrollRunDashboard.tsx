@@ -1,9 +1,9 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SpinnerIcon, CheckCircleIcon, CircleIcon, CheckIcon } from './icons';
 import { calculateMonthlyPayroll } from '../data/sampleData';
-import type { Employee } from '../types';
+import type { Employee, LeaveRequest, ChangeRequest } from '../types';
+import { AdminApprovalQueue } from './ess/AdminApprovalQueue';
 
 // --- Helper Functions ---
 const formatCurrency = (amount: number) => {
@@ -21,9 +21,12 @@ const initialChecklist = [
 interface PayrollRunDashboardProps {
     employees: Employee[];
     onRestart: () => void;
+    leaveRequests: LeaveRequest[];
+    changeRequests: ChangeRequest[];
+    onUpdateRequestStatus: (id: number, status: 'approved' | 'rejected', type: 'leave' | 'change') => void;
 }
 
-export const PayrollRunDashboard: React.FC<PayrollRunDashboardProps> = ({ employees, onRestart }) => {
+export const PayrollRunDashboard: React.FC<PayrollRunDashboardProps> = ({ employees, onRestart, leaveRequests, changeRequests, onUpdateRequestStatus }) => {
     const [payrollStatus, setPayrollStatus] = useState<'Not Started' | 'Processing' | 'Completed'>('Not Started');
     const [checklist, setChecklist] = useState(initialChecklist);
 
@@ -79,24 +82,46 @@ export const PayrollRunDashboard: React.FC<PayrollRunDashboardProps> = ({ employ
                 return 'Run Payroll';
         }
     };
+    
+    const pendingLeaveRequests = useMemo(() => leaveRequests.filter(r => r.status === 'pending'), [leaveRequests]);
+    const pendingChangeRequests = useMemo(() => changeRequests.filter(r => r.status === 'pending'), [changeRequests]);
+
 
     return (
         <div className="min-h-screen bg-slate-50">
             <header className="bg-white shadow-sm border-b border-slate-200">
                 <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                    <h1 className="text-xl font-bold text-slate-800">Run Payroll</h1>
+                    <h1 className="text-xl font-bold text-slate-800">Admin Dashboard</h1>
                      <div className="flex items-center space-x-6">
+                         <Link
+                            to="/employees"
+                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                        >
+                            View All Employees
+                        </Link>
                          <Link
                             to="/reports"
                             className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
                         >
                             View Reports
                         </Link>
+                         <Link
+                            to="/reports/payroll-register"
+                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                        >
+                            Payroll Register
+                        </Link>
+                         <Link
+                            to="/login"
+                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                        >
+                            Employee Login
+                        </Link>
                         <button
                             onClick={onRestart}
                             className="text-sm font-semibold text-slate-500 hover:text-red-600 transition-colors"
                         >
-                            Start New Onboarding
+                            Reset All Data
                         </button>
                     </div>
                 </div>
@@ -104,15 +129,26 @@ export const PayrollRunDashboard: React.FC<PayrollRunDashboardProps> = ({ employ
 
             <main className="py-8">
                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="animate-fade-in">
+                    <div className="animate-fade-in space-y-8">
                         {/* Header */}
-                        <div className="mb-6">
+                        <div>
                             <h2 className="text-2xl font-bold text-slate-800">October 2026 Payroll</h2>
                             <p className="text-sm text-slate-500">Review details below and run payroll for the current period.</p>
                         </div>
+                        
+                        {/* Approval Queue */}
+                        {(pendingLeaveRequests.length > 0 || pendingChangeRequests.length > 0) && (
+                            <AdminApprovalQueue 
+                                leaveRequests={pendingLeaveRequests}
+                                changeRequests={pendingChangeRequests}
+                                employees={employees}
+                                onUpdateRequestStatus={onUpdateRequestStatus}
+                            />
+                        )}
+
 
                         {/* Summary Cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                             <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
                                 <p className="text-sm font-medium text-slate-500">Total Employees</p>
                                 <p className="text-2xl font-bold text-slate-800">{employees.length}</p>
@@ -132,7 +168,7 @@ export const PayrollRunDashboard: React.FC<PayrollRunDashboardProps> = ({ employ
                         </div>
 
                         {/* Checklist and Run Payroll Button */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2 bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
                                 <h3 className="text-lg font-semibold text-slate-800 mb-4">Pre-payroll Checklist</h3>
                                 <div className="space-y-3">

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { CalculatorIcon } from './icons';
@@ -122,6 +121,29 @@ export const EmployeePayrollDetail: React.FC<EmployeePayrollDetailProps> = ({ em
                                 <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-6 text-center">
                                     <p className="text-sm font-medium text-slate-500 uppercase">Net Take-Home Pay (Monthly)</p>
                                     <p className="text-4xl font-bold text-indigo-600 mt-2">{formatCurrency(payroll.netTakeHomePay)}</p>
+                                </div>
+                            </div>
+
+                            {/* YTD Section */}
+                            <div className="md:col-span-2">
+                                <div className="bg-white border border-slate-200 rounded-lg shadow-sm">
+                                    <div className="p-4 border-b border-slate-200">
+                                        <h3 className="text-md font-bold text-slate-800">Year-to-Date (YTD) Summary</h3>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200">
+                                        <div className="text-center p-4">
+                                            <p className="text-sm text-slate-500">Gross Earnings</p>
+                                            <p className="text-lg font-semibold text-slate-800 font-mono mt-1">{formatCurrency(payroll.annualGross)}</p>
+                                        </div>
+                                        <div className="text-center p-4">
+                                            <p className="text-sm text-slate-500">Total Deductions</p>
+                                            <p className="text-lg font-semibold text-slate-800 font-mono mt-1">{formatCurrency(payroll.ytdDeductions)}</p>
+                                        </div>
+                                        <div className="text-center p-4">
+                                            <p className="text-sm text-slate-500">Net Take-Home Pay</p>
+                                            <p className="text-lg font-semibold text-indigo-600 font-mono mt-1">{formatCurrency(payroll.ytdNetPay)}</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 

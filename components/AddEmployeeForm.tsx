@@ -1,15 +1,22 @@
-import React, { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import type { Employee, PFA } from '../types';
 import { UploadCloudIcon, CheckCircleIcon, TrashIcon, XCircleIcon } from './icons';
 
 interface Props {
   pfas: PFA[];
-  onAddEmployee: (employee: Employee) => void;
+  onAddEmployee?: (employee: Employee) => void;
+  onUpdateEmployee?: (employee: Employee) => void;
+  employees?: Employee[];
+  defaultSalaryComponents?: {
+    basic: number;
+    housing: number;
+    transport: number;
+  };
 }
 
 const initialEmployeeState: Omit<Employee, 'photo'> = {
-  id: `EMP${String(Date.now()).slice(-4)}`,
+  id: '',
   firstName: '',
   lastName: '',
   middleName: '',
@@ -30,13 +37,32 @@ const initialEmployeeState: Omit<Employee, 'photo'> = {
   pfa: '',
   rsaPin: '',
   contributesToNHF: false,
+  leaveBalances: { annual: 20, sick: 10 },
 };
 
 const tabs = ['Personal Information', 'Job Information', 'Salary & Compensation', 'Statutory Details'];
 
-export const AddEmployeeForm: React.FC<Props> = ({ pfas, onAddEmployee }) => {
+export const AddEmployeeForm: React.FC<Props> = ({ pfas, onAddEmployee, onUpdateEmployee, employees = [], defaultSalaryComponents }) => {
+  const { employeeId } = useParams();
+  const isEditMode = !!employeeId;
+  
   const [activeTab, setActiveTab] = useState(0);
-  const [employeeData, setEmployeeData] = useState<Omit<Employee, 'photo'>>(initialEmployeeState);
+  const [employeeData, setEmployeeData] = useState<Omit<Employee, 'photo'>>(() => {
+    if (isEditMode) {
+        const employeeToEdit = employees.find(e => e.id === employeeId);
+        if (employeeToEdit) {
+            const { photo, ...dataToEdit } = employeeToEdit;
+            return dataToEdit;
+        }
+    }
+    // This is for a new employee
+    const initialState = { ...initialEmployeeState, id: `EMP${String(Date.now()).slice(-4)}`};
+    if (defaultSalaryComponents) {
+        initialState.salaryComponents = defaultSalaryComponents;
+    }
+    return initialState;
+  });
+
   const [photo, setPhoto] = useState<File | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,7 +70,6 @@ export const AddEmployeeForm: React.FC<Props> = ({ pfas, onAddEmployee }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -73,7 +98,13 @@ export const AddEmployeeForm: React.FC<Props> = ({ pfas, onAddEmployee }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Add validation
-    onAddEmployee({ ...employeeData, photo });
+    const finalEmployeeData = { ...employeeData, photo };
+
+    if (isEditMode) {
+        onUpdateEmployee?.(finalEmployeeData);
+    } else {
+        onAddEmployee?.(finalEmployeeData);
+    }
   };
   
   const totalPercentage = employeeData.salaryComponents.basic + employeeData.salaryComponents.housing + employeeData.salaryComponents.transport;
@@ -235,7 +266,7 @@ export const AddEmployeeForm: React.FC<Props> = ({ pfas, onAddEmployee }) => {
     <div className="min-h-screen bg-slate-50">
         <header className="bg-white shadow-sm border-b border-slate-200">
             <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                <h1 className="text-xl font-bold text-slate-800">Add New Employee</h1>
+                <h1 className="text-xl font-bold text-slate-800">{isEditMode ? 'Edit Employee Details' : 'Add New Employee'}</h1>
                  <Link
                     to="/setup/employees"
                     className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
@@ -299,7 +330,7 @@ export const AddEmployeeForm: React.FC<Props> = ({ pfas, onAddEmployee }) => {
                         <div className={activeTab === 1 ? 'block animate-fade-in' : 'hidden'}>
                             <h3 className="text-lg font-semibold text-slate-800 mb-6">Job Information</h3>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <InputField label="Employee ID" name="id" value={employeeData.id} onChange={handleChange} required />
+                                <InputField label="Employee ID" name="id" value={employeeData.id} onChange={handleChange} required disabled={isEditMode} />
                                 <InputField label="Job Title" name="jobTitle" value={employeeData.jobTitle} onChange={handleChange} required />
                                 <InputField label="Department" name="department" value={employeeData.department} onChange={handleChange} required />
                                 <SelectField label="Employment Type" name="employmentType" value={employeeData.employmentType} onChange={handleChange} options={['Full-time', 'Contract', 'Intern']} required />
@@ -365,7 +396,7 @@ export const AddEmployeeForm: React.FC<Props> = ({ pfas, onAddEmployee }) => {
                                 type="submit"
                                 className="px-6 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
                             >
-                                Save Employee
+                                {isEditMode ? 'Update Employee' : 'Save Employee'}
                             </button>
                         )}
                     </div>
@@ -385,7 +416,7 @@ const InputField: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label
             id={name} 
             name={name}
             {...props}
-            className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+            className="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed" 
         />
     </div>
 );
