@@ -5,11 +5,17 @@ import { CompanyDetailsStep } from './components/CompanyDetailsStep';
 import { StatutoryInfoStep } from './components/StatutoryInfoStep';
 import { PensionSetupStep } from './components/PensionSetupStep';
 import { PayScheduleStep } from './components/PayScheduleStep';
-import { PayrollCalculationView } from './components/PayrollCalculationView';
+import { EmployeeSetup } from './components/EmployeeSetup';
+import { AddEmployeeForm } from './components/AddEmployeeForm';
+import { PayrollRunDashboard } from './components/PayrollRunDashboard';
+import { PayrollRegister } from './components/PayrollRegister';
 import { StepIndicator } from './components/StepIndicator';
 import { ProgressBar } from './components/ProgressBar';
 import { CheckCircleIcon, CheckIcon } from './components/icons';
-import type { FormData, PFA } from './types';
+import type { FormData, PFA, Employee } from './types';
+import { EmployeePayrollDetail } from './components/EmployeePayrollDetail';
+import { sampleEmployees } from './data/sampleData';
+import { ComplianceReportsDashboard } from './components/ComplianceReportsDashboard';
 
 type PfaError = {
   id: number;
@@ -61,8 +67,23 @@ const getInitialData = (): FormData => {
   }
 };
 
+const getInitialEmployees = (): Employee[] => {
+    const savedEmployees = localStorage.getItem('employees');
+    // For demo purposes, we'll start with sample data if nothing is saved.
+    // In a real app, this would default to an empty array `[]`.
+    return savedEmployees ? JSON.parse(savedEmployees) : sampleEmployees;
+};
+
 
 const App: React.FC = () => {
+  const [onboardingCompleted, setOnboardingCompleted] = useState(
+    () => localStorage.getItem('onboardingCompleted') === 'true'
+  );
+  const [setupCompleted, setSetupCompleted] = useState(
+      () => localStorage.getItem('setupCompleted') === 'true'
+  );
+  const [employees, setEmployees] = useState<Employee[]>(getInitialEmployees);
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [formData, setFormData] = useState<FormData>(getInitialData);
   const [hasSavedData, setHasSavedData] = useState(() => !!localStorage.getItem('onboardingFormData'));
@@ -80,15 +101,31 @@ const App: React.FC = () => {
     setHasSavedData(true);
   }, [formData]);
 
-  // Effect to save the current step path to localStorage
+  // Effect to save employee data to localStorage
   useEffect(() => {
-    if (location.pathname !== '/complete' && location.pathname !== '/payroll-calculation') {
-      localStorage.setItem('onboardingLastStep', location.pathname);
+    localStorage.setItem('employees', JSON.stringify(employees));
+  }, [employees]);
+
+  // Effect to set completion status and save current step path to localStorage
+  useEffect(() => {
+    if (location.pathname === '/complete' && !onboardingCompleted) {
+        setOnboardingCompleted(true);
+        localStorage.setItem('onboardingCompleted', 'true');
+        localStorage.removeItem('onboardingLastStep');
+    } else if (location.pathname !== '/complete' && !onboardingCompleted) {
+       // Only save wizard steps
+       const currentStepInfo = steps.find(s => s.path === location.pathname);
+       if(currentStepInfo && currentStepInfo.step <= TOTAL_STEPS) {
+         localStorage.setItem('onboardingLastStep', location.pathname);
+       }
     }
-  }, [location.pathname]);
+  }, [location.pathname, onboardingCompleted]);
+
 
   // Effect to navigate to the last saved step on initial load
   useEffect(() => {
+    if (onboardingCompleted) return; // Don't run this effect post-onboarding
+    
     const savedStep = localStorage.getItem('onboardingLastStep');
     if (savedStep && savedStep !== location.pathname) {
       navigate(savedStep, { replace: true });
@@ -102,9 +139,6 @@ const App: React.FC = () => {
   );
   const currentStep = currentStepInfo.step;
   const currentStepIndex = steps.findIndex(s => s.path === location.pathname);
-  
-  const isWizardStep = location.pathname !== '/payroll-calculation';
-
 
   const validateStep = (step: number): boolean => {
     const newErrors: FormErrors = {};
@@ -169,14 +203,16 @@ const App: React.FC = () => {
   };
   
   const handleClearAndRestart = () => {
-    localStorage.removeItem('onboardingFormData');
-    localStorage.removeItem('onboardingLastStep');
+    localStorage.clear();
     setHasSavedData(false);
     setErrors({});
     setFormData({
       ...initialFormData,
       pfas: [{ id: Date.now(), pfaName: '', employerCode: '' }],
     });
+    setEmployees(sampleEmployees); // Reset to sample for demo
+    setOnboardingCompleted(false);
+    setSetupCompleted(false);
     navigate(steps[0].path);
   }
 
@@ -231,12 +267,49 @@ const App: React.FC = () => {
     }, 500); // Simulate a short save duration
   };
 
+  const handleAddEmployee = (newEmployee: Employee) => {
+    setEmployees(prev => [...prev, newEmployee]);
+    navigate('/setup/employees');
+  };
+
+  const handleCompleteSetup = () => {
+      setSetupCompleted(true);
+      localStorage.setItem('setupCompleted', 'true');
+      navigate('/dashboard');
+  }
+
   const stepTitles = steps.slice(0, TOTAL_STEPS).map(s => s.title);
 
+  // Main application routing logic
+  if (onboardingCompleted) {
+    if (setupCompleted) {
+      // Phase 3: Payroll Dashboard and Reports
+      return (
+        <Routes>
+          <Route path="/dashboard" element={<PayrollRunDashboard employees={employees} onRestart={handleClearAndRestart} />} />
+          <Route path="/reports" element={<ComplianceReportsDashboard />} />
+          <Route path="/reports/payroll-register" element={<PayrollRegister employees={employees} />} />
+          <Route path="/employee-detail/:employeeId" element={<EmployeePayrollDetail employees={employees} />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      );
+    } else {
+      // Phase 2: Employee Setup
+       return (
+        <Routes>
+          <Route path="/setup/employees" element={<EmployeeSetup employees={employees} onCompleteSetup={handleCompleteSetup} />} />
+          <Route path="/setup/add-employee" element={<AddEmployeeForm onAddEmployee={handleAddEmployee} pfas={formData.pfas} />} />
+          <Route path="*" element={<Navigate to="/setup/employees" replace />} />
+        </Routes>
+       )
+    }
+  }
+
+  // Phase 1: Onboarding Wizard
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden relative">
-        {hasSavedData && currentStep <= TOTAL_STEPS && isWizardStep && (
+        {hasSavedData && currentStep <= TOTAL_STEPS && (
             <button
                 onClick={handleClearAndRestart}
                 className="absolute top-4 right-4 text-xs text-slate-500 hover:text-red-600 underline z-10 transition-colors"
@@ -244,8 +317,8 @@ const App: React.FC = () => {
                 Clear progress and restart
             </button>
         )}
-
-        {isWizardStep && (
+        
+        {currentStep <= TOTAL_STEPS && (
              <div className="p-8">
                 <h1 className="text-2xl font-bold text-slate-800 text-center mb-2">Company Onboarding</h1>
                 <p className="text-slate-500 text-center mb-8">Set up your company profile to get started with payroll.</p>
@@ -267,32 +340,26 @@ const App: React.FC = () => {
             <Route path="/statutory" element={<StatutoryInfoStep data={formData} onDataChange={handleChange} />} />
             <Route path="/pension" element={<PensionSetupStep pfas={formData.pfas} onPfasChange={updatePfas} errors={errors.pfaErrors}/>} />
             <Route path="/schedule" element={<PayScheduleStep data={formData} onDataChange={handleChange} errors={errors} />} />
-            <Route path="/payroll-calculation" element={<PayrollCalculationView />} />
             <Route path="/complete" element={
               <div className="text-center p-8 animate-fade-in">
                 <CheckCircleIcon className="w-20 h-20 text-green-500 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-slate-800 mb-2">Onboarding Complete!</h2>
-                <p className="text-slate-600 mb-8">Your company profile has been successfully created.</p>
+                <p className="text-slate-600 mb-8">Your company profile has been successfully created. Next, set up your employees.</p>
                 <div className="flex justify-center items-center gap-4">
                      <button
-                        onClick={handleClearAndRestart}
-                        className="bg-slate-200 text-slate-800 font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 transition-all duration-300"
-                    >
-                        Start New Onboarding
-                    </button>
-                    <button
-                        onClick={() => navigate('/payroll-calculation')}
+                        onClick={() => navigate('/setup/employees')}
                         className="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300"
                     >
-                        View Sample Payroll Calculation
+                        Setup Employees
                     </button>
                 </div>
               </div>
             } />
+             <Route path="*" element={<Navigate to={steps[0].path} replace />} />
           </Routes>
         </div>
         
-        {currentStep <= TOTAL_STEPS && isWizardStep && (
+        {currentStep <= TOTAL_STEPS && (
           <div className="flex justify-between items-center p-6 bg-white border-t border-slate-200">
             <div>
               <button
