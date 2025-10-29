@@ -1,0 +1,5 @@
+{
+  "name": "Nigerian Payroll Onboarding Wizard",
+  "description": "A multi-step user interface for a company onboarding wizard for a Nigerian payroll SaaS. This wizard guides users through setting up company details, statutory information, pension administrators, and pay schedules.",
+  "requestFramePermissions": []
+}
